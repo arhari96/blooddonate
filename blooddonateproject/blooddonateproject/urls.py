@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from blooddonateapp.views import validate_tokens
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("api/google/login", validate_tokens, name="google_login")
+
 ]

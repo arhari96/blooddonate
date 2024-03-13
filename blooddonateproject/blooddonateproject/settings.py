@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-yko3%%n4g0-j&u^3jg=q4p*f(50y@xpd-lgei)!9&itgzgp89$
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+CCOUNT_EMAIL_VERIFICATION = "none"
 
 # Application definition
 
@@ -38,8 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "django.contrib.sites",  # new
+    "allauth",  # new
+    "allauth.account",  # new
+    "allauth.socialaccount",  # new
+    "rest_framework.authtoken"
 ]
 
 MIDDLEWARE = [
@@ -50,10 +54,25 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        "allauth.account.middleware.AccountMiddleware",  # new
+]
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",  
+    "allauth.account.auth_backends.AuthenticationBackend",  # new
 ]
 
+SITE_ID = 1  # new
 ROOT_URLCONF = 'blooddonateproject.urls'
 
+LOGIN_REDIRECT_URL = "/"  # new
+SOCIALACCOUNT_PROVIDERS = {
+    "github": {
+        "APP": {
+            "client_id": "123",
+            "secret": "456",
+        }
+    }
+}
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
