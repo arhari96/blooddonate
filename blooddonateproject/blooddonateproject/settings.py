@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     "allauth",  # new
     "allauth.account",  # new
     "allauth.socialaccount",  # new
-    "rest_framework.authtoken"
+    "rest_framework.authtoken",
+     'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -101,7 +102,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
