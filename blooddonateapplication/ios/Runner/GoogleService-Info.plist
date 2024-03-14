@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>4708992077-mus500q0rb5q8lj5irrear1758560oib.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.4708992077-mus500q0rb5q8lj5irrear1758560oib</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>4708992077-krabmtij7tqcipuand6m0v1jauqd5r0e.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAvqwGezRtRIbiOWJ_D1LwIyjG_mNDutCg</string>
+	<key>GCM_SENDER_ID</key>
+	<string>4708992077</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>net.hamsahari.blooddonateapp.blooddonateapplication</string>
+	<key>PROJECT_ID</key>
+	<string>proplus-logics</string>
+	<key>STORAGE_BUCKET</key>
+	<string>proplus-logics.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:4708992077:ios:f20ac86b5c65e7c66a8804</string>
+</dict>
+</plist>
