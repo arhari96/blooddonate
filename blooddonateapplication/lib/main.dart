@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -58,8 +60,17 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  void _incrementCounter() {
-   GoogleSignIn _googleSignIn = GoogleSignIn();
+  void _incrementCounter() async {
+    try {
+      GoogleSignIn _googleSignIn = GoogleSignIn();
+      GoogleSignInAccount? _googleSignInAccount = await _googleSignIn.signIn();
+      GoogleSignInAuthentication _googleSignInAuthentication =
+          await _googleSignInAccount!.authentication;
+      log(_googleSignInAuthentication.idToken!);
+      print(_googleSignInAccount.displayName);
+    } catch (e) {
+      print(e);
+    }
   }
 
   @override

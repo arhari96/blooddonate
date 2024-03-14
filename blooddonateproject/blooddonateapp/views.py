@@ -24,6 +24,7 @@ class GoogleSocialAuthView(GenericAPIView):
         auth_token = serializer.validated_data['auth_token']
         
         user_data = google.Google.validate(auth_token)
+        print(user_data)
         try:
             user_data['sub']
         except:

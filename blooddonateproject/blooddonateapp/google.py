@@ -14,8 +14,10 @@ class Google:
             idinfo = id_token.verify_oauth2_token(
                 auth_token, requests.Request())
 
-            if 'accounts.google.com' in idinfo['iss']:
-                return idinfo
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                raise ValueError('Wrong issuer.')
+
+            return idinfo
 
         except:
             return "The token is either invalid or has expired"
