@@ -10,20 +10,23 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-yko3%%n4g0-j&u^3jg=q4p*f(50y@xpd-lgei)!9&itgzgp89$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 ALLOWED_HOSTS = []
 CCOUNT_EMAIL_VERIFICATION = "none"
@@ -32,19 +35,15 @@ CCOUNT_EMAIL_VERIFICATION = "none"
 
 INSTALLED_APPS = [
     'blooddonateapp',
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "allauth.socialaccount.providers.google",
-    "django.contrib.sites",  # new
-    "allauth",  # new
-    "allauth.account",  # new
-    "allauth.socialaccount",  # new
     "rest_framework.authtoken",
-     'rest_framework',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -55,25 +54,22 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        "allauth.account.middleware.AccountMiddleware",  # new
 ]
 AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",  
-    "allauth.account.auth_backends.AuthenticationBackend",  # new
+    "django.contrib.auth.backends.ModelBackend", 
 ]
 
-SITE_ID = 1  # new
+SIMPJWT_ACCESS_TOKEN_LIFETIME = timedelta(days=15)  # Set access token expiration time
+SIMPJWT_REFRESH_TOKEN_LIFETIME = timedelta(weeks=1)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # Other authentication classes...
+    ],
+}
+
 ROOT_URLCONF = 'blooddonateproject.urls'
 
-LOGIN_REDIRECT_URL = "/"  # new
-SOCIALACCOUNT_PROVIDERS = {
-    "github": {
-        "APP": {
-            "client_id": "123",
-            "secret": "456",
-        }
-    }
-}
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

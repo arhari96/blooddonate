@@ -1,77 +1,75 @@
 from django.db import models
 
-# Create your models here.
-from django.contrib.auth.models import (
-    AbstractBaseUser, BaseUserManager, PermissionsMixin)
+# Constants for blood group choices
+BLOOD_GROUP_CHOICES = [
+    ('A+', 'A+'),
+    ('A-', 'A-'),
+    ('B+', 'B+'),
+    ('B-', 'B-'),
+    ('AB+', 'AB+'),
+    ('AB-', 'AB-'),
+    ('O+', 'O+'),
+    ('O-', 'O-'),
+]
 
-from django.db import models
-from rest_framework_simplejwt.tokens import RefreshToken
+class UserProfile(models.Model):
+    AUTH_PROVIDERS = {
+        'facebook': 'facebook',
+        'google': 'google',
+        'twitter': 'twitter',
+        'email': 'email'
+    }
 
-
-class UserManager(BaseUserManager):
-
-    def create_user(self, username, email, password=None):
-        if username is None:
-            raise TypeError('Users should have a username')
-        if email is None:
-            raise TypeError('Users should have a Email')
-
-        user = self.model(username=username, email=self.normalize_email(email))
-        user.set_password(password)
-        user.save()
-        return user
-
-    def create_superuser(self, username, email, password=None):
-        if password is None:
-            raise TypeError('Password should not be none')
-
-        user = self.create_user(username, email, password)
-        user.is_superuser = True
-        user.is_staff = True
-        user.save()
-        return user
-
-
-AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google',
-                  'twitter': 'twitter', 'email': 'email'}
-
-
-class Users(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=255, unique=True, db_index=True)
     email = models.EmailField(max_length=255, unique=True, db_index=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     auth_provider = models.CharField(
-        max_length=255, blank=False,
-        null=False, default=AUTH_PROVIDERS.get('email'))
-    user_permissions = models.ManyToManyField(
-         'auth.Permission',
-         blank=True,
-         related_name='custom_user_set',
-         help_text='Specific permissions for this user.',
-         verbose_name='user permissions',
-      )
-    groups = models.ManyToManyField(
-        'auth.Group',
-        verbose_name='groups',
-        blank=True,
-        related_name='custom_user_set',
-        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+        max_length=255,
+        blank=False,
+        null=False,
+        default=AUTH_PROVIDERS.get('email')
     )
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-
-    objects = UserManager()
+    user_id = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
+    profile_pic = models.URLField(blank=True)
+    dob = models.DateField(null=True, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    pincode = models.CharField(max_length=10, blank=True)
+    blood_type = models.CharField(max_length=10, choices=BLOOD_GROUP_CHOICES, blank=True)
+    profile_filled = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.email
+        return self.name
 
-    def tokens(self):
-        refresh = RefreshToken.for_user(self)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token)
-        }
+class NeedBlood(models.Model):
+    blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES)
+    name = models.CharField(max_length=100)
+    request_date = models.DateField()
+    location = models.CharField(max_length=200)
+    detail = models.TextField()
+    contact_number = models.CharField(max_length=15)
+    donated = models.BooleanField(default=False)
+    donated_date = models.DateField(null=True, blank=True)
+    requested_user = models.ForeignKey(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name='blood_requests'
+    )
+    donated_user = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='blood_donations'
+    )
+
+    def __str__(self):
+        return f"{self.name} - {self.blood_group}"
+
+    def donate_blood(self, donated_user):
+        self.donated = True
+        self.donated_user = donated_user
+        self.save()
