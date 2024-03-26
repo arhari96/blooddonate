@@ -19,6 +19,8 @@ class GoogleSocialAuthView(GenericAPIView):
 
     def post(self, request):
         load_dotenv()
+        client_key_ios = os.getenv('CLIENT_KEY_IOS')
+        client_key_android = os.getenv('CLIENT_KEY_ANDROID')
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         auth_token = serializer.validated_data['auth_token']
@@ -30,8 +32,14 @@ class GoogleSocialAuthView(GenericAPIView):
         except:
             raise AuthenticationFailed('The token is invalid or expired. Please login again.')
 
-        if user_data['aud'] != os.getenv('CLIENT_KEY'):
-            raise AuthenticationFailed('Oops, who are you?')
+        if user_data['aud'] != client_key_ios and user_data['aud'] != client_key_android:
+            return Response({
+           'status':'failed',
+            'message': 'Oops, who are you?',
+            'data': {}
+        }, status=status.HTTP_401_UNAUTHORIZED)
+        
+            
 
         user_id = user_data['sub']
         email = user_data['email']
@@ -40,10 +48,6 @@ class GoogleSocialAuthView(GenericAPIView):
         
         # Check if user already exists
         user, created = UserProfile.objects.get_or_create(email=email, defaults={'user_id': user_id, 'name': name})
-        access_token = AccessToken.for_user(user)
-
-        # Generate refresh token
-        refresh_token = RefreshToken.for_user(user)
         
         # Generate JWT token
         jwt_payload = {'user_id': user.user_id, 'email': user.email}
@@ -62,10 +66,15 @@ class GoogleSocialAuthView(GenericAPIView):
         
         # Return response with JWT token and user profile
         return Response({
-            'access_token': jwt_token,
-            'refresh_token': jwt_token,
+          
+            'status':'success',
             'message': message,
-            'user_profile': user_profile_serializer.data
+            'data':{
+
+            'user_profile': user_profile_serializer.data,
+              'token': jwt_token,
+           
+            }
         }, status=status.HTTP_200_OK)
 
 
