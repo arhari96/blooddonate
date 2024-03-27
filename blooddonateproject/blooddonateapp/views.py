@@ -21,6 +21,8 @@ class GoogleSocialAuthView(GenericAPIView):
         load_dotenv()
         client_key_ios = os.getenv('CLIENT_KEY_IOS')
         client_key_android = os.getenv('CLIENT_KEY_ANDROID')
+        client_key_web = os.getenv('CLIENT_KEY_WEB')
+        client_key_google = os.getenv('CLIENT_KEY_GOOGLE')
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         auth_token = serializer.validated_data['auth_token']
@@ -32,7 +34,7 @@ class GoogleSocialAuthView(GenericAPIView):
         except:
             raise AuthenticationFailed('The token is invalid or expired. Please login again.')
 
-        if user_data['aud'] != client_key_ios and user_data['aud'] != client_key_android:
+        if user_data['aud'] != client_key_google and user_data['aud'] != client_key_android:
             return Response({
            'status':'failed',
             'message': 'Oops, who are you?',
@@ -44,7 +46,7 @@ class GoogleSocialAuthView(GenericAPIView):
         user_id = user_data['sub']
         email = user_data['email']
         name = user_data['name']
-        profile_pic = user_data.get('picture', '')  # Get profile picture if available
+        profile_pic = user_data['picture']  # Get profile picture if available
         
         # Check if user already exists
         user, created = UserProfile.objects.get_or_create(email=email, defaults={'user_id': user_id, 'name': name})
@@ -70,7 +72,6 @@ class GoogleSocialAuthView(GenericAPIView):
             'status':'success',
             'message': message,
             'data':{
-
             'user_profile': user_profile_serializer.data,
               'token': jwt_token,
            
