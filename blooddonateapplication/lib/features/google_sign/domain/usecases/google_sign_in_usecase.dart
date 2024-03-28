@@ -1,5 +1,5 @@
-import 'package:blooddonateapp/shared/data/model/data_response.dart';
 
+import '../../../../shared/data/model/data_response.dart';
 import '../entities/google_data.dart';
 
 abstract class GoogleSignInUseCase {

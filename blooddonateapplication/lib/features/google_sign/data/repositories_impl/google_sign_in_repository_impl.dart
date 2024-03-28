@@ -1,8 +1,9 @@
-import 'package:blooddonateapp/features/google_sign/data/data_source/google_sign_in_apiservices.dart';
-import 'package:blooddonateapp/features/google_sign/domain/entities/google_data.dart';
-import 'package:blooddonateapp/features/google_sign/domain/repositories/google_sign_in_repository.dart';
-import 'package:blooddonateapp/shared/data/model/data_response.dart';
 import 'package:dio/dio.dart';
+
+import '../../../../shared/data/model/data_response.dart';
+import '../../domain/entities/google_data.dart';
+import '../../domain/repositories/google_sign_in_repository.dart';
+import '../data_source/google_sign_in_apiservices.dart';
 
 class GoogleSignInRepositoryImpl extends GoogleSignInRepository {
   final GoogleSignInApiServices _googleSignInApiServices;

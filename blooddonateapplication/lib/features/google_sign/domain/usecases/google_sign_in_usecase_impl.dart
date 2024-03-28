@@ -1,9 +1,11 @@
-import 'package:blooddonateapp/features/google_sign/domain/entities/google_data.dart';
-import 'package:blooddonateapp/features/google_sign/domain/usecases/google_sign_in_usecase.dart';
-import 'package:blooddonateapp/shared/data/model/data_response.dart';
+
+
 import 'package:hive/hive.dart';
 
+import '../../../../shared/data/model/data_response.dart';
+import '../entities/google_data.dart';
 import '../repositories/google_sign_in_repository.dart';
+import 'google_sign_in_usecase.dart';
 
 class GoogleSignInUseCaseImpl extends GoogleSignInUseCase {
   final Box<String> _DataBox;
