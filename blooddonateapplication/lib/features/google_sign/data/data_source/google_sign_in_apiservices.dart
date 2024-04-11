@@ -11,7 +11,7 @@ part 'google_sign_in_apiservices.g.dart';
 abstract class GoogleSignInApiServices {
   factory GoogleSignInApiServices(Dio dio) = _GoogleSignInApiServices;
 
-  @POST(Urls.baseUrl)
+  @POST(Urls.googleLogin)
   Future<HttpResponse<GoogleSignInResponseModel>> googleSignIn(
     @Field(ApiArguments.auth_token) String authToken,
   );

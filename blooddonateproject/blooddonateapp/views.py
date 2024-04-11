@@ -27,14 +27,14 @@ class GoogleSocialAuthView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         auth_token = serializer.validated_data['auth_token']
         
-        user_data = google.Google.validate(auth_token)
+        user_data = google.Google.validate(auth_token)  
         print(user_data)
         try:
             user_data['sub']
         except:
             raise AuthenticationFailed('The token is invalid or expired. Please login again.')
 
-        if user_data['aud'] != client_key_google and user_data['aud'] != client_key_android:
+        if user_data['aud'] != client_key_ios and user_data['aud'] != client_key_android:
             return Response({
            'status':'failed',
             'message': 'Oops, who are you?',
@@ -65,9 +65,7 @@ class GoogleSocialAuthView(GenericAPIView):
         
         # Serialize user profile
         user_profile_serializer = UserProfileSerializer(user)
-        
-        # Return response with JWT token and user profile
-        return Response({
+        response_data ={
           
             'status':'success',
             'message': message,
@@ -76,9 +74,15 @@ class GoogleSocialAuthView(GenericAPIView):
               'token': jwt_token,
            
             }
-        }, status=status.HTTP_200_OK)
+        }
+        print(response_data)
+        # Return response with JWT token and user profile
+        return Response(response_data, status=status.HTTP_200_OK)
 
-
+class Test(APIView):    
+    def get(self, request):
+        print(request.data)
+        return Response({'message': 'Hello, World!'}, status=status.HTTP_200_OK)
 
 class TokenRefreshView(APIView):
     permission_classes = [IsAuthenticated]

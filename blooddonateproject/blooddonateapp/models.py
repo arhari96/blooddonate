@@ -20,7 +20,7 @@ class UserProfile(models.Model):
         'email': 'email'
     }
 
-    username = models.CharField(max_length=255, unique=True, db_index=True)
+    username = models.CharField(max_length=255, unique=True, db_index=True)         
     email = models.EmailField(max_length=255, unique=True, db_index=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -46,11 +46,13 @@ class UserProfile(models.Model):
 
 class NeedBlood(models.Model):
     blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES)
-    name = models.CharField(max_length=100)
+    patient_name = models.CharField(max_length=100)
+    age = models.IntegerField()
     request_date = models.DateField()
     location = models.CharField(max_length=200)
     detail = models.TextField()
-    contact_number = models.CharField(max_length=15)
+    contact_number = models.CharField(max_length=10)
+    contact_person_name = models.CharField(max_length=25)
     donated = models.BooleanField(default=False)
     donated_date = models.DateField(null=True, blank=True)
     requested_user = models.ForeignKey(

@@ -14,6 +14,6 @@ class GoogleSignInUseCaseImpl extends GoogleSignInUseCase {
   GoogleSignInUseCaseImpl(this._DataBox, this._googleSignInRepository);
 
   @override
-  Future<DataResponse<GoogleData>> googleSignIn(String authToken) async =>
-      await _googleSignInRepository.googleSignIn(authToken);
+  Future<DataResponse<GoogleData>> googleSignIn() async =>
+      await _googleSignInRepository.googleSignIn();
 }

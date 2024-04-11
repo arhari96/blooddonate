@@ -16,4 +16,5 @@ class BloodRequestController extends GetxController {
   String? get patientGender => _patientGender;
   String? _requestBloodGroup;
   String? get requestBloodGroup => _requestBloodGroup;
+
 }

@@ -14,12 +14,16 @@ class GoogleSignInRepositoryImpl extends GoogleSignInRepository {
   @override
   Future<DataResponse<GoogleData>> googleSignIn() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignIn googleSignIn = await GoogleSignIn();
+      await googleSignIn.signOut();
+      final GoogleSignInAccount? _googleSignInAccount =
+          await googleSignIn.signIn();
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
-
-      final httpResponse = await _googleSignInApiServices.googleSignIn(googleAuth!.idToken!);
+      final GoogleSignInAuthentication? googleAuth =
+          await _googleSignInAccount?.authentication;
+      final httpResponse =
+          await _googleSignInApiServices.googleSignIn(googleAuth!.idToken!);
 
       return DataResponse.fromHttpResponse(httpResponse);
     } on DioException catch (e) {

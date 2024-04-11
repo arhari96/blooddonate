@@ -3,6 +3,9 @@ import 'package:blooddonateapplication/features/blood_request/presentation/pages
 import 'package:blooddonateapplication/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:blooddonateapplication/features/google_sign/presentation/bindings/google_sign_in_bindings.dart';
 import 'package:blooddonateapplication/features/google_sign/presentation/pages/sign_in.dart';
+import 'package:blooddonateapplication/features/profile/presentation/getx/profile_binding.dart';
+import 'package:blooddonateapplication/features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:blooddonateapplication/features/profile/presentation/pages/profile_page.dart';
 import 'package:blooddonateapplication/shared/presentation/splash_screen.dart';
 import 'package:get/get.dart';
 

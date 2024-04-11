@@ -1,4 +1,5 @@
 import 'package:blooddonateapplication/features/blood_request/presentation/getx/blood_request_controller.dart';
+import 'package:blooddonateapplication/shared/constants/app_colors.dart';
 import 'package:blooddonateapplication/shared/presentation/widgets/custom_dropdown.dart';
 import 'package:blooddonateapplication/shared/presentation/widgets/custom_form_field.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,7 @@ class BloodRequestPage extends GetView<BloodRequestController> {
                 lable: 'Select Location',
                 items: controller.locations,
                 updateId: 'updateId',
-                margin: EdgeInsets.symmetric(vertical: 1.5.h,horizontal: 3.w),
+                margin: EdgeInsets.symmetric(vertical: 1.5.h, horizontal: 3.w),
                 callBack: (v) {},
                 getxController: controller),
             CustomFormField(
@@ -61,11 +62,23 @@ class BloodRequestPage extends GetView<BloodRequestController> {
               inputAction: TextInputAction.newline,
               maxLength: 250,
             ),
-            FilledButton(
-                onPressed: () {
-                  controller.formKey!.currentState!.validate();
-                },
-                child: Text('Request'))
+            InkWell(
+                onTap: () async {},
+                child: Container(
+                  alignment: Alignment.center,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(14)),
+                  margin: EdgeInsets.symmetric(vertical: 2.h, horizontal: 20.w),
+                  child: Text(
+                    'Request',
+                    style: TextStyle(
+                      color: AppColors.lightTextColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ))
           ],
         ),
       ),

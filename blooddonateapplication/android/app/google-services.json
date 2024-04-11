@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "4708992077-voqgm7tublm134pn6qtqccrkb3jtt21r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "net.hamsahari.blooddonateapp",
+            "certificate_hash": "efbdddf9c2fe1fcd4343fb509c306dc2181dc340"
+          }
+        },
+        {
           "client_id": "4708992077-ms6pve5dnc9codku16v59lu3s5l1fjvr.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -37,6 +45,13 @@
             {
               "client_id": "4708992077-ms6pve5dnc9codku16v59lu3s5l1fjvr.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "4708992077-mus500q0rb5q8lj5irrear1758560oib.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "net.hamsahari.blooddonateapp.blooddonateapplication"
+              }
             }
           ]
         }
@@ -51,6 +66,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "4708992077-nrmei467bl5b26se1hkuu78c7mb7htev.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "net.hamsahari.blooddonateapp.blooddonateapplication",
+            "certificate_hash": "efbdddf9c2fe1fcd4343fb509c306dc2181dc340"
+          }
+        },
+        {
           "client_id": "4708992077-ms6pve5dnc9codku16v59lu3s5l1fjvr.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -66,6 +89,13 @@
             {
               "client_id": "4708992077-ms6pve5dnc9codku16v59lu3s5l1fjvr.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "4708992077-mus500q0rb5q8lj5irrear1758560oib.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "net.hamsahari.blooddonateapp.blooddonateapplication"
+              }
             }
           ]
         }

@@ -17,9 +17,10 @@ class AppColors {
     },
   );
 
-  static const Color primaryColor = Color(0xFFec2f38);
+  static const Color primaryColor = Color(0xcfe0252f);
   static const Color secondaryColor = Color(0xFFa7bbf8);
   static const Color accentColor = Color(0xFF7a0a0a);
+  static const Color lightTextColor = Color(0xfffcffff);
   static const Color supportingColor = Color(0xFF4c84ac);
   static const Color notificationColor = Color(0xFFcdb3ba);
   static const Color textandicons = Color(0xFF445360);
