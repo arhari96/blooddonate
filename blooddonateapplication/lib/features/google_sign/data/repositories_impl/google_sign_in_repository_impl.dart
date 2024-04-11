@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../../shared/data/model/data_response.dart';
 import '../../domain/entities/google_data.dart';
@@ -11,9 +12,14 @@ class GoogleSignInRepositoryImpl extends GoogleSignInRepository {
   GoogleSignInRepositoryImpl(this._googleSignInApiServices);
 
   @override
-  Future<DataResponse<GoogleData>> googleSignIn(String token) async {
+  Future<DataResponse<GoogleData>> googleSignIn() async {
     try {
-      final httpResponse = await _googleSignInApiServices.googleSignIn(token);
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+      final httpResponse = await _googleSignInApiServices.googleSignIn(googleAuth!.idToken!);
 
       return DataResponse.fromHttpResponse(httpResponse);
     } on DioException catch (e) {

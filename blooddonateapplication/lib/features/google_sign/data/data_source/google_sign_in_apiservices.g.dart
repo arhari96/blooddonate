@@ -13,7 +13,7 @@ class _GoogleSignInApiServices implements GoogleSignInApiServices {
     this._dio, {
     this.baseUrl,
   }) {
-    baseUrl ??= 'http://192.168.219.96:8000';
+    baseUrl ??= 'http://127.0.0.1:8000';
   }
 
   final Dio _dio;
@@ -35,7 +35,7 @@ class _GoogleSignInApiServices implements GoogleSignInApiServices {
     )
             .compose(
               _dio.options,
-              'http://192.168.219.96:8000',
+              '/api/google/',
               queryParameters: queryParameters,
               data: _data,
             )
