@@ -1,3 +1,4 @@
+import 'package:blooddonateapplication/shared/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
@@ -6,6 +7,7 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import 'shared/constants/app_pages.dart';
 import 'shared/constants/app_routes.dart';
 import 'shared/domain/hive_adaper_register.dart';
+import 'shared/presentation/main_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
