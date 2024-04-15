@@ -1,18 +1,19 @@
 from django.db import models
-
+from django.utils import timezone
+from django.contrib.auth.models import AbstractUser
 # Constants for blood group choices
 BLOOD_GROUP_CHOICES = [
-    ('A+', 'A+'),
-    ('A-', 'A-'),
-    ('B+', 'B+'),
-    ('B-', 'B-'),
-    ('AB+', 'AB+'),
-    ('AB-', 'AB-'),
-    ('O+', 'O+'),
-    ('O-', 'O-'),
+        ('A+', 'A+'),
+        ('A-', 'A-'),
+        ('B+', 'B+'),
+        ('B-', 'B-'),
+        ('AB+', 'AB+'),
+        ('AB-', 'AB-'),
+        ('O+', 'O+'),
+        ('O-', 'O-'),
 ]
 
-class UserProfile(models.Model):
+class UserProfile(AbstractUser):
     AUTH_PROVIDERS = {
         'facebook': 'facebook',
         'google': 'google',
@@ -40,9 +41,10 @@ class UserProfile(models.Model):
     pincode = models.CharField(max_length=10, blank=True)
     blood_type = models.CharField(max_length=10, choices=BLOOD_GROUP_CHOICES, blank=True)
     profile_filled = models.BooleanField(default=False)
+    fcm_token = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return self.username
 
 class NeedBlood(models.Model):
     blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES)
@@ -54,6 +56,7 @@ class NeedBlood(models.Model):
     contact_number = models.CharField(max_length=10)
     contact_person_name = models.CharField(max_length=25)
     donated = models.BooleanField(default=False)
+    request_date = models.DateField(auto_now_add=True)
     donated_date = models.DateField(null=True, blank=True)
     requested_user = models.ForeignKey(
         UserProfile,
@@ -74,4 +77,5 @@ class NeedBlood(models.Model):
     def donate_blood(self, donated_user):
         self.donated = True
         self.donated_user = donated_user
-        self.save()
+        self.donated_date = timezone.now()
+        self.save() 

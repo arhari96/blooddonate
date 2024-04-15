@@ -29,7 +29,7 @@ DEBUG = os.getenv("DEBUG")
 SECRET_KEY = os.getenv('SECRET_KEY')
 ALLOWED_HOSTS = ['*']
 CCOUNT_EMAIL_VERIFICATION = "none"
-
+AUTH_USER_MODEL = 'blooddonateapp.UserProfile'
 # Application definition
 
 INSTALLED_APPS = [
@@ -54,18 +54,22 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend", 
-]
 
-SIMPJWT_ACCESS_TOKEN_LIFETIME = timedelta(days=15)  # Set access token expiration time
-SIMPJWT_REFRESH_TOKEN_LIFETIME = timedelta(weeks=1)
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        # Other authentication classes...
-    ],
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': False,
 }
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(weeks=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': False,
+}
+
 
 ROOT_URLCONF = 'blooddonateproject.urls'
 
