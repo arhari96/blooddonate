@@ -21,8 +21,6 @@ class GoogleSocialAuthView(GenericAPIView):
         load_dotenv()
         client_key_ios = os.getenv('CLIENT_KEY_IOS')
         client_key_android = os.getenv('CLIENT_KEY_ANDROID')
-        client_key_web = os.getenv('CLIENT_KEY_WEB')
-        client_key_google = os.getenv('CLIENT_KEY_GOOGLE')
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         auth_token = serializer.validated_data['auth_token']
@@ -50,26 +48,32 @@ class GoogleSocialAuthView(GenericAPIView):
         
         # Check if user already exists
         user, created = UserProfile.objects.get_or_create(email=email, defaults={'user_id': user_id, 'name': name})
-        # Generate JWT token
-        access_token = AccessToken.for_user(user)
         
         if created:
             # If the user was just created, set additional profile fields
             user.profile_pic = profile_pic
             user.save()
+            
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
             message = "Account created successfully"
         else:
+            
+            refresh = RefreshToken.for_user(user)
+            access_token = str(refresh.access_token)
             message = "Logged in successfully"
+        # Generate tokens for the user
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
         
         # Serialize user profile
         user_profile_serializer = UserProfileSerializer(user)
         response_data ={
-          
             'status':'success',
             'message': message,
             'data':{
             'user_profile': user_profile_serializer.data,
-              'token': str(access_token),
+              'token': access_token,
            
             }
         }
@@ -81,8 +85,10 @@ class UpdateUserProfile(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request):
-        user_profile = request.user.profile  # Assuming request.user contains the authenticated user
+        print(request.data)
+        user_profile = request.user  # Assuming request.user contains the authenticated user
         serializer = UserProfileSerializer(user_profile, data=request.data, partial=True)
+        print(serializer)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         jwt_payload = {'user_id': user_profile.user_id, 'email': user_profile.email}

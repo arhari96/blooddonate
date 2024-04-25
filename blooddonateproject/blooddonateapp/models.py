@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
+import uuid
 # Constants for blood group choices
 BLOOD_GROUP_CHOICES = [
         ('A+', 'A+'),
@@ -21,8 +22,8 @@ class UserProfile(AbstractUser):
         'email': 'email'
     }
 
-    username = models.CharField(max_length=255, unique=True, db_index=True)         
-    email = models.EmailField(max_length=255, unique=True, db_index=True)
+    username = models.CharField(max_length=255, unique=True, default=uuid.uuid1)         
+    email = models.EmailField(max_length=255, unique=True, )
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
