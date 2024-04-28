@@ -14,26 +14,38 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
-from blooddonateapp.views import DonateBloodView, GoogleSocialAuthView, ListBloodRequestsView, NeedBloodView,Test, UpdateUserProfile
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from blooddonateapp.views import (
+    DonateBloodView,
+    GoogleSocialAuthView,
+    ListBloodRequestsView,
+    NeedBloodView,
+    Test,
+    UpdateUserProfile,
+)
 
 
 urlpatterns = [
-
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('admin/', admin.site.urls),
-    path('api/google/', GoogleSocialAuthView.as_view()),
-        path('api/update-profile/', UpdateUserProfile.as_view(), name='update-profile'),
-
-path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/test/', Test.as_view(), name='test'),
- path('api/request-blood/', NeedBloodView.as_view(), name='request-blood'),
- path('api/blood-requests/', ListBloodRequestsView.as_view(), name='list-blood-requests'),
-
-  path('api/donate-blood/<int:request_id>/', DonateBloodView.as_view(), name='donate-blood'),
-
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("admin/", admin.site.urls),
+    path("api/google/", GoogleSocialAuthView.as_view()),
+    path("api/update-profile/", UpdateUserProfile.as_view(), name="update-profile"),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/test/", Test.as_view(), name="test"),
+    path("api/request-blood/", NeedBloodView.as_view(), name="request-blood"),
+    path(
+        "api/blood-requests/",
+        ListBloodRequestsView.as_view(),
+        name="list-blood-requests",
+    ),
+    path(
+        "api/donate-blood/<int:request_id>/",
+        DonateBloodView.as_view(),
+        name="donate-blood",
+    ),
 ]
