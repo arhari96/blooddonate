@@ -1,5 +1,4 @@
 from django.contrib import admin
+from .models import UserProfile, NeedBlood, DonorImages
 
-from .models import UserProfile, NeedBlood
-
-admin.site.register([UserProfile, NeedBlood])
+admin.site.register([UserProfile, NeedBlood, DonorImages])

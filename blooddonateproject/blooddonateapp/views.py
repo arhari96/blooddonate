@@ -7,8 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.exceptions import AuthenticationFailed
 from . import google
-from .models import NeedBlood, UserProfile
+from .models import DonorImages, NeedBlood, UserProfile
 from .serializers import (
+    DonorImagesSerializer,
+    FcmTokenUpdateSerializer,
     GoogleSocialAuthSerializer,
     NeedBloodSerializer,
     UserProfileSerializer,
@@ -26,7 +28,7 @@ class GoogleSocialAuthView(GenericAPIView):
         load_dotenv()
         client_key_ios = os.getenv("CLIENT_KEY_IOS")
         client_key_android = os.getenv("CLIENT_KEY_ANDROID")
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data)   
         serializer.is_valid(raise_exception=True)
         auth_token = serializer.validated_data["auth_token"]
 
@@ -118,6 +120,22 @@ class UpdateUserProfile(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class FcmTokenUpdateView(APIView):
+    permission_classes = [IsAuthenticated]  # Only authenticated users can update
+
+    def patch(self, request):
+        serializer = FcmTokenUpdateSerializer(
+            data=request.data
+        )  # Use serializer (if used)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user  # Access the authenticated user (requires authentication)
+        user.fcm_token = serializer.validated_data["fcm_token"]  # Update the token
+        user.save()
+
+        return Response({"message": "FCM token updated successfully."})
+
+
 class Test(APIView):
     def get(self, request):
         print(request.data)
@@ -139,6 +157,45 @@ class TokenRefreshView(APIView):
             return Response({"error": "Invalid refresh token"}, status=400)
 
         return Response({"access_token": str(access_token)})
+
+
+class RequestandViewBloodRequest(APIView):
+    """
+    View to list all blood requests and create a new request.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        blood_requests = NeedBlood.objects.all()
+        serializer = NeedBloodSerializer(blood_requests, many=True)
+        donor_images = DonorImages.objects.all()
+        donor_images_serializer = DonorImagesSerializer(donor_images, many=True)
+        response_data = {
+            "status": "success",
+            "message": "List fetched successfully",
+            "data": serializer.data,
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = NeedBloodSerializer(
+            data=request.data, context={"request": request}
+        )
+        if serializer.is_valid():
+            serializer.save(requested_user=request.user)
+            response_data = {
+                "message": "Blood request created successfully",
+                "status": "success",
+                "data": serializer.data,
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        response_data = {
+            "message": "Blood request not created",
+            "status": "failure",
+            "data": serializer.errors,
+        }
+        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NeedBloodView(APIView):
@@ -189,16 +246,47 @@ class ListBloodRequestsView(ListAPIView):
 class DonateBloodView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, request_id):
-        need_blood = get_object_or_404(NeedBlood, id=request_id)
+    def post(self, request):
+        # Retrieve the 'id' of the NeedBlood object from the request
+        need_blood_id = request.data.get("id")
+        print(need_blood_id)
+        if not need_blood_id:
+            return Response(
+                {"message": "Missing blood request ID."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+        # Find the NeedBlood instance or return a 404 error
+        need_blood = get_object_or_404(NeedBlood, id=need_blood_id)
+
+        # Check if the blood has already been donated
         if need_blood.donated:
             return Response(
                 {"message": "Blood has already been donated for this request."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        need_blood.donate_blood(donated_user=request.user)
+        # Get donor_photos list from request.files (this part depends on your front-end implementation)
+        donor_photos = request.FILES.getlist("donor_photos")
+        if not donor_photos:
+            return Response(
+                {"message": "No donor photos uploaded."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Pass the authenticated user and the photos to the donate_blood method
+        for photo in donor_photos:
+            donor_image = DonorImages(need_blood=need_blood, image=photo)
+            donor_image.save()
+        need_blood.donate_blood(
+            donated_user=request.user,  
+        )
+
         return Response(
-            {"message": "Thank you for donating blood!"}, status=status.HTTP_200_OK
+            {
+                "status": "success",
+                "message": "Blood donation successful. Thank you for donating blood!",
+                "data": "Success",
+            },
+            status=status.HTTP_200_OK,
         )

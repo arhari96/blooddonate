@@ -18,11 +18,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.conf import settings
+from django.conf.urls.static import static
 from blooddonateapp.views import (
     DonateBloodView,
     GoogleSocialAuthView,
-    ListBloodRequestsView,
-    NeedBloodView,
+    RequestandViewBloodRequest,
     Test,
     UpdateUserProfile,
 )
@@ -37,15 +38,10 @@ urlpatterns = [
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/test/", Test.as_view(), name="test"),
-    path("api/request-blood/", NeedBloodView.as_view(), name="request-blood"),
     path(
         "api/blood-requests/",
-        ListBloodRequestsView.as_view(),
-        name="list-blood-requests",
+        RequestandViewBloodRequest.as_view(),
+        name="blood_requests_list",
     ),
-    path(
-        "api/donate-blood/<int:request_id>/",
-        DonateBloodView.as_view(),
-        name="donate-blood",
-    ),
-]
+    path("api/donate-blood/", DonateBloodView.as_view(), name="donate_blood"),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,19 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
-import uuid
-
-# Constants for blood group choices
-BLOOD_GROUP_CHOICES = [
-    ("A+", "A+"),
-    ("A-", "A-"),
-    ("B+", "B+"),
-    ("B-", "B-"),
-    ("AB+", "AB+"),
-    ("AB-", "AB-"),
-    ("O+", "O+"),
-    ("O-", "O-"),
-]
 
 
 class UserProfile(AbstractUser):
@@ -24,16 +11,13 @@ class UserProfile(AbstractUser):
         "email": "email",
     }
 
-    email = models.EmailField(
-        max_length=255,
-        unique=True,
-    )
+    email = models.EmailField(max_length=255, unique=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     auth_provider = models.CharField(
-        max_length=255, blank=False, null=False, default=AUTH_PROVIDERS.get("email")
+        max_length=255, blank=False, null=False, default=AUTH_PROVIDERS["email"]
     )
     user_id = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
@@ -41,18 +25,37 @@ class UserProfile(AbstractUser):
     dob = models.DateField(null=True, blank=True)
     city = models.CharField(max_length=100, blank=True)
     pincode = models.CharField(max_length=10, blank=True)
-    blood_type = models.CharField(
-        max_length=10, choices=BLOOD_GROUP_CHOICES, blank=True
-    )
+    blood_type = models.CharField(max_length=10, blank=True)
     profile_filled = models.BooleanField(default=False)
     fcm_token = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return "{0} {1}".format(self.name, self.email)
+        return f"{self.name} ({self.email})"
+
+
+class DonorModel(models.Model):
+    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
+    blood_type = models.CharField(max_length=10)
+    city = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=10)
+    donor_images = models.ForeignKey(
+        "DonorImages",  # Using a string to refer to the model before it's declared
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="related_need_blood",
+    )
+    donated_user = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="blood_donations",
+    )
 
 
 class NeedBlood(models.Model):
-    blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES)
+    blood_group = models.CharField(max_length=3)
     patient_name = models.CharField(max_length=100)
     age = models.IntegerField()
     location = models.CharField(max_length=200)
@@ -64,16 +67,7 @@ class NeedBlood(models.Model):
     request_date = models.DateField(auto_now_add=True)
     donated_date = models.DateField(null=True, blank=True)
     requested_user = models.ForeignKey(
-        UserProfile,
-        on_delete=models.CASCADE,  # Cascade deletion if the related UserProfile is deleted
-        related_name="blood_requests",
-    )
-    donated_user = models.ForeignKey(
-        UserProfile,
-        on_delete=models.SET_NULL,  # Set to NULL if the related UserProfile is deleted
-        null=True,
-        blank=True,
-        related_name="blood_donations",
+        UserProfile, on_delete=models.CASCADE, related_name="blood_requests"
     )
 
     def __str__(self):
@@ -84,3 +78,19 @@ class NeedBlood(models.Model):
         self.donated_user = donated_user
         self.donated_date = timezone.now()
         self.save()
+
+        # Create DonorImages instance for this blood donation
+        donor_image = DonorImages(need_blood=self)
+        donor_image.save()
+
+
+class DonorImages(models.Model):
+    need_blood = models.ForeignKey(
+        NeedBlood,
+        on_delete=models.CASCADE,
+        related_name="donor_images",  # This is how you link multiple images to a NeedBlood
+    )
+    image = models.ImageField(upload_to="donor_pics/")
+
+    def __str__(self):
+        return f"Donor Image for {self.need_blood.patient_name}"
