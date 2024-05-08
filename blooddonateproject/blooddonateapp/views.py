@@ -8,6 +8,9 @@ from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.exceptions import AuthenticationFailed
 from . import google
 from .models import DonorImages, NeedBlood, UserProfile
+from firebase_admin import messaging
+import asyncio
+import json
 from .serializers import (
     DonorImagesSerializer,
     FcmTokenUpdateSerializer,
@@ -28,12 +31,11 @@ class GoogleSocialAuthView(GenericAPIView):
         load_dotenv()
         client_key_ios = os.getenv("CLIENT_KEY_IOS")
         client_key_android = os.getenv("CLIENT_KEY_ANDROID")
-        serializer = self.serializer_class(data=request.data)   
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         auth_token = serializer.validated_data["auth_token"]
 
         user_data = google.Google.validate(auth_token)
-        print(user_data)
         try:
             user_data["sub"]
         except:
@@ -87,7 +89,6 @@ class GoogleSocialAuthView(GenericAPIView):
                 "token": access_token,
             },
         }
-        print(response_data)
         # Return response with JWT token and user profile
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -137,8 +138,9 @@ class FcmTokenUpdateView(APIView):
 
 
 class Test(APIView):
-    def get(self, request):
-        print(request.data)
+    def post(self, request):
+        
+
         return Response({"message": "Hello, World!"}, status=status.HTTP_200_OK)
 
 
@@ -167,10 +169,8 @@ class RequestandViewBloodRequest(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        blood_requests = NeedBlood.objects.all()
+        blood_requests = NeedBlood.objects.all().order_by("-request_date")
         serializer = NeedBloodSerializer(blood_requests, many=True)
-        donor_images = DonorImages.objects.all()
-        donor_images_serializer = DonorImagesSerializer(donor_images, many=True)
         response_data = {
             "status": "success",
             "message": "List fetched successfully",
@@ -184,6 +184,24 @@ class RequestandViewBloodRequest(APIView):
         )
         if serializer.is_valid():
             serializer.save(requested_user=request.user)
+            data = serializer.data
+            requested_user_data = data['requested_user']
+            title = f"New Blood Request for {data["blood_group"]}"   
+            body = f"{requested_user_data['name']} has requested for blood {data['blood_group']}"
+            message = messaging.Message(
+                notification=messaging.Notification(title=title, body=body),
+                topic="requestblood",
+            )
+
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                message_response = loop.run_until_complete(self.send_fcm_message(message))
+                print("Message Response:", message_response)
+            except Exception as e:
+                print("Error:", e)
+            finally:
+                loop.close()
             response_data = {
                 "message": "Blood request created successfully",
                 "status": "success",
@@ -196,6 +214,13 @@ class RequestandViewBloodRequest(APIView):
             "data": serializer.errors,
         }
         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    async def send_fcm_message(self, message):
+        try:
+            message_response = await messaging.send(message)
+            print("Message Response:", message_response)
+        except Exception as e:
+            print("Error:", e)
 
 
 class NeedBloodView(APIView):
@@ -214,7 +239,6 @@ class NeedBloodView(APIView):
                 "status": "success",
                 "data": serializer.data,
             }
-            print(response_data)
             return Response(response_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -249,7 +273,6 @@ class DonateBloodView(APIView):
     def post(self, request):
         # Retrieve the 'id' of the NeedBlood object from the request
         need_blood_id = request.data.get("id")
-        print(need_blood_id)
         if not need_blood_id:
             return Response(
                 {"message": "Missing blood request ID."},
@@ -279,7 +302,7 @@ class DonateBloodView(APIView):
             donor_image = DonorImages(need_blood=need_blood, image=photo)
             donor_image.save()
         need_blood.donate_blood(
-            donated_user=request.user,  
+            donated_user=request.user,
         )
 
         return Response(

@@ -53,9 +53,7 @@ class DonorImagesSerializer(serializers.ModelSerializer):
 
 
 class NeedBloodSerializer(serializers.ModelSerializer):
-    requested_user = serializers.PrimaryKeyRelatedField(
-        queryset=UserProfile.objects.all(), default=serializers.CurrentUserDefault()
-    )
+    requested_user = UserProfileSerializer(read_only=True)
     donated_user = UserProfileSerializer(read_only=True)
     donor_images = DonorImagesSerializer(many=True, read_only=True)
 

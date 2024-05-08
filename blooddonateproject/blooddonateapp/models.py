@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class UserProfile(AbstractUser):
@@ -74,14 +75,11 @@ class NeedBlood(models.Model):
         return f"{self.patient_name} - {self.blood_group}"
 
     def donate_blood(self, donated_user):
+
         self.donated = True
         self.donated_user = donated_user
         self.donated_date = timezone.now()
         self.save()
-
-        # Create DonorImages instance for this blood donation
-        donor_image = DonorImages(need_blood=self)
-        donor_image.save()
 
 
 class DonorImages(models.Model):
@@ -90,7 +88,11 @@ class DonorImages(models.Model):
         on_delete=models.CASCADE,
         related_name="donor_images",  # This is how you link multiple images to a NeedBlood
     )
-    image = models.ImageField(upload_to="donor_pics/")
+    image = models.ImageField(
+        upload_to="donor_pics/",
+        blank=False,
+        null=False,
+    )
 
     def __str__(self):
         return f"Donor Image for {self.need_blood.patient_name}"
