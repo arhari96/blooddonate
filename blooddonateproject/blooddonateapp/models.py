@@ -60,6 +60,7 @@ class NeedBlood(models.Model):
     patient_name = models.CharField(max_length=100)
     age = models.IntegerField()
     location = models.CharField(max_length=200)
+    place = models.CharField(max_length=200, blank=True, null=True)
     detail = models.TextField()
     contact_number = models.CharField(max_length=10)
     contact_person_name = models.CharField(max_length=25)
@@ -80,6 +81,29 @@ class NeedBlood(models.Model):
         self.donated_user = donated_user
         self.donated_date = timezone.now()
         self.save()
+
+
+class Like(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    need_blood = models.ForeignKey(
+        NeedBlood, on_delete=models.CASCADE, related_name="likes"
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Like by {self.user.username} on {self.need_blood.patient_name}"
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    need_blood = models.ForeignKey(
+        NeedBlood, on_delete=models.CASCADE, related_name="comments"
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.need_blood.patient_name}"
 
 
 class DonorImages(models.Model):

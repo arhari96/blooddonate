@@ -26,6 +26,8 @@ from blooddonateapp.views import (
     RequestandViewBloodRequest,
     Test,
     UpdateUserProfile,
+    LikePost,
+    UnlikePost,
 )
 
 
@@ -35,8 +37,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/google/", GoogleSocialAuthView.as_view()),
     path("api/update-profile/", UpdateUserProfile.as_view(), name="update-profile"),
-    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/test/", Test.as_view(), name="test"),
     path(
         "api/blood-requests/",
@@ -44,4 +44,6 @@ urlpatterns = [
         name="blood_requests_list",
     ),
     path("api/donate-blood/", DonateBloodView.as_view(), name="donate_blood"),
+    path("posts/<int:pk>/like/", LikePost.as_view(), name="like_post"),
+    path("posts/<int:pk>/dislike/", UnlikePost.as_view(), name="dislike_post"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

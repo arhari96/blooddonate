@@ -2,15 +2,14 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.exceptions import AuthenticationFailed
 from . import google
-from .models import DonorImages, NeedBlood, UserProfile
+from .models import DonorImages, NeedBlood, UserProfile,Like,Comment
 from firebase_admin import messaging
 import asyncio
-import json
 from .serializers import (
     DonorImagesSerializer,
     FcmTokenUpdateSerializer,
@@ -170,7 +169,7 @@ class RequestandViewBloodRequest(APIView):
 
     def get(self, request):
         blood_requests = NeedBlood.objects.all().order_by("-request_date")
-        serializer = NeedBloodSerializer(blood_requests, many=True)
+        serializer = NeedBloodSerializer(blood_requests, many=True,context={"request": request})
         response_data = {
             "status": "success",
             "message": "List fetched successfully",
@@ -185,9 +184,9 @@ class RequestandViewBloodRequest(APIView):
         if serializer.is_valid():
             serializer.save(requested_user=request.user)
             data = serializer.data
-            requested_user_data = data['requested_user']
+            requested_user_data = UserProfile.objects.get(id= request.user.id)
             title = f"New Blood Request for {data["blood_group"]}"   
-            body = f"{requested_user_data['name']} has requested for blood {data['blood_group']}"
+            body = f"{requested_user_data.name} has requested for blood {data['blood_group']}"
             message = messaging.Message(
                 notification=messaging.Notification(title=title, body=body),
                 topic="requestblood",
@@ -207,6 +206,7 @@ class RequestandViewBloodRequest(APIView):
                 "status": "success",
                 "data": serializer.data,
             }
+            print(response_data)
             return Response(response_data, status=status.HTTP_201_CREATED)
         response_data = {
             "message": "Blood request not created",
@@ -222,6 +222,60 @@ class RequestandViewBloodRequest(APIView):
         except Exception as e:
             print("Error:", e)
 
+class LikePost(APIView):
+    """
+    View to like a blood request.
+    """
+
+    def post(self, request, need_blood_id):
+        need_blood = get_object_or_404(NeedBlood, id=need_blood_id)
+        # Check if the user has already liked the post
+        if Like.objects.filter(user=request.user, need_blood=need_blood).exists():
+            return Response(
+                {
+                    "status": "failure",
+                    "data": False,
+                    "message": "You have already liked this post.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Create a new like
+        like = Like.objects.create(user=request.user, need_blood=need_blood)
+        like.save()
+        return Response(
+            {"status": "success", "data": True, "message": "Post liked successfully."},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class UnlikePost(APIView):
+    """
+    View to unlike a blood request.
+    """
+
+    def post(self, request, need_blood_id):
+        need_blood = get_object_or_404(NeedBlood, id=need_blood_id)
+        # Check if the user has already liked the post
+        like = Like.objects.filter(user=request.user, need_blood=need_blood).first()
+        if not like:
+            return Response(
+                {
+                    "status": "failure",
+                    "message": "You have not liked this post.",
+                    "data": True,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Delete the like
+        like.delete()
+        return Response(
+            {
+                "status": "success",
+                "message": "Post unliked successfully.",
+                "data": False,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class NeedBloodView(APIView):
     permission_classes = [IsAuthenticated]
