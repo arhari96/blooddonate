@@ -30,6 +30,14 @@ class UserProfile(AbstractUser):
     profile_filled = models.BooleanField(default=False)
     fcm_token = models.TextField(null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        # Check if the username is not set and the email is provided
+        if not self.username and self.email:
+            # Set the username to the email
+            self.username = self.email
+        # Call the super save method to save the object
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.name} ({self.email})"
 

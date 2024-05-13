@@ -96,6 +96,7 @@ class UpdateUserProfile(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request):
+        print(request)
         user_profile = request.user
         serializer = UserProfileSerializer(
             user_profile, data=request.data, partial=True
