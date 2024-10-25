@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -7,11 +8,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.exceptions import AuthenticationFailed
 from . import google
-from .models import DonorImages, NeedBlood, UserProfile,Like,Comment
+from .models import DonorImages, NeedBlood, UserProfile, Like, Comment, Donor
 from firebase_admin import messaging
 import asyncio
 from .serializers import (
     DonorImagesSerializer,
+    BloodRequestSerializer,
     FcmTokenUpdateSerializer,
     GoogleSocialAuthSerializer,
     NeedBloodSerializer,
@@ -20,6 +22,20 @@ from .serializers import (
 from dotenv import load_dotenv
 import os
 import jwt
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_detail(request):
+    user = request.user
+    serializer = UserProfileSerializer(user)
+    return Response(
+        {
+            "status": "success",
+            "message": "User details retrieved successfully",
+            "data": serializer.data,
+        }
+    )
 
 
 class GoogleSocialAuthView(GenericAPIView):
@@ -139,7 +155,6 @@ class FcmTokenUpdateView(APIView):
 
 class Test(APIView):
     def post(self, request):
-        
 
         return Response({"message": "Hello, World!"}, status=status.HTTP_200_OK)
 
@@ -169,8 +184,12 @@ class RequestandViewBloodRequest(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        blood_requests = NeedBlood.objects.all().order_by("-request_date")
-        serializer = NeedBloodSerializer(blood_requests, many=True,context={"request": request})
+        blood_requests = NeedBlood.objects.filter(approved=True).order_by(
+            "-request_date"
+        )
+        serializer = NeedBloodSerializer(
+            blood_requests, many=True, context={"request": request}
+        )
         response_data = {
             "status": "success",
             "message": "List fetched successfully",
@@ -185,18 +204,20 @@ class RequestandViewBloodRequest(APIView):
         if serializer.is_valid():
             serializer.save(requested_user=request.user)
             data = serializer.data
-            requested_user_data = UserProfile.objects.get(id= request.user.id)
-            title = f"New Blood Request for {data["blood_group"]}"   
+            requested_user_data = UserProfile.objects.get(id=request.user.id)
+            title = f"New Blood Request for {data["blood_group"]}"
             body = f"{requested_user_data.name} has requested for blood {data['blood_group']}"
             message = messaging.Message(
-                notification=messaging.Notification(title=title, body=body),
-                topic="requestblood",
+                data={"title": title, "body": body},
+                topic="blood_request_approve",
             )
 
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
-                message_response = loop.run_until_complete(self.send_fcm_message(message))
+                message_response = loop.run_until_complete(
+                    self.send_fcm_message(message)
+                )
                 print("Message Response:", message_response)
             except Exception as e:
                 print("Error:", e)
@@ -222,6 +243,7 @@ class RequestandViewBloodRequest(APIView):
             print("Message Response:", message_response)
         except Exception as e:
             print("Error:", e)
+
 
 class LikePost(APIView):
     """
@@ -277,6 +299,7 @@ class UnlikePost(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
 
 class NeedBloodView(APIView):
     permission_classes = [IsAuthenticated]
@@ -364,6 +387,76 @@ class DonateBloodView(APIView):
             {
                 "status": "success",
                 "message": "Blood donation successful. Thank you for donating blood!",
+                "data": "Success",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@api_view(["Get"])
+def get_blood_requests(request):
+    blood_requests = NeedBlood.objects.all()
+    serializer = BloodRequestSerializer(blood_requests, many=True)
+    return Response(
+        {
+            "status": "success",
+            "message": "Blood requests fetched successfully",
+            "data": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+def donate_blood(request, request_id):
+    need_blood = get_object_or_404(NeedBlood, id=request_id)
+    need_blood.update_donated_units(1, request.user)
+    Donor.objects.create(blood_request=need_blood, user=request.user, units_donated=1)
+
+    return Response(
+        {
+            "status": "success",
+            "message": "Blood donation successful. Thank you for donating blood!",
+            "data": "Success",
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+class PendingRequests(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        pending_requests = NeedBlood.objects.filter(approved=False)
+        serializer = BloodRequestSerializer(pending_requests, many=True)
+        return Response(
+            {
+                "status": "success",
+                "message": "Pending blood requests fetched successfully",
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request):
+        request_id = request.data.get("id")
+        need_blood = get_object_or_404(NeedBlood, id=request_id)
+        need_blood.approved = True
+        need_blood.save()
+        notification_title = f"{need_blood.blood_group} Blood Request"
+        notification_body = f"{need_blood.patient_name} needs {need_blood.blood_units} units of {need_blood.blood_group} blood."
+        message = messaging.Message(
+            data={
+                "title": notification_title,
+                "body": notification_body,
+            },
+            topic="blood_requests",
+        )
+        result = messaging.send(message)
+        return Response(
+            {
+                "status": "success",
+                "message": "Blood request approved successfully",
                 "data": "Success",
             },
             status=status.HTTP_200_OK,

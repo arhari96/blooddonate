@@ -33,8 +33,9 @@ ALLOWED_HOSTS = ["*"]
 CCOUNT_EMAIL_VERIFICATION = "none"
 AUTH_USER_MODEL = "blooddonateapp.UserProfile"
 # Application definition
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "serviceAccountKey.json")
 
-cred = credentials.Certificate("serviceAccountKey.json")
+cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
 firebase_app = firebase_admin.initialize_app(cred)
 
 INSTALLED_APPS = [

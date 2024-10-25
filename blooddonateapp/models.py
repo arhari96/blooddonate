@@ -29,6 +29,7 @@ class UserProfile(AbstractUser):
     blood_type = models.CharField(max_length=10, blank=True)
     profile_filled = models.BooleanField(default=False)
     fcm_token = models.TextField(null=True, blank=True)
+    admin = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         # Check if the username is not set and the email is provided
@@ -73,6 +74,8 @@ class NeedBlood(models.Model):
     contact_number = models.CharField(max_length=10)
     contact_person_name = models.CharField(max_length=25)
     number_of_units = models.IntegerField(default=1)
+    donated_units = models.IntegerField(default=0)
+    approved = models.BooleanField(default=False)
     donated = models.BooleanField(default=False)
     request_date = models.DateField(auto_now_add=True)
     donated_date = models.DateField(null=True, blank=True)
@@ -83,12 +86,33 @@ class NeedBlood(models.Model):
     def __str__(self):
         return f"{self.patient_name} - {self.blood_group}"
 
+    def update_donated_units(
+        self,
+        units,
+    ):
+        self.donated_units += units
+        if self.donated_units >= self.number_of_units:
+            self.donated = True
+            self.donated_date = timezone.now()
+        self.save()
+
     def donate_blood(self, donated_user):
 
         self.donated = True
         self.donated_user = donated_user
         self.donated_date = timezone.now()
         self.save()
+
+
+class Donor(models.Model):
+    blood_request = models.ForeignKey(
+        NeedBlood, on_delete=models.CASCADE, related_name="donors"
+    )
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    units_donated = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.user.username} donated {self.units_donated} units for {self.blood_request.patient_name}"
 
 
 class Like(models.Model):

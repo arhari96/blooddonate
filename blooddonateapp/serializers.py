@@ -24,6 +24,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "pincode",
             "blood_type",
             "profile_filled",
+            "admin",
         )
 
     def update(self, instance, validated_data):
@@ -111,3 +112,11 @@ class NeedBloodSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)
         return instance
+
+
+class BloodRequestSerializer(serializers.ModelSerializer):
+    requested_user = UserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = NeedBlood
+        fields = "__all__"
