@@ -20,7 +20,7 @@ class UserProfile(AbstractUser):
     auth_provider = models.CharField(
         max_length=255, blank=False, null=False, default=AUTH_PROVIDERS["email"]
     )
-    user_id = models.CharField(max_length=255, unique=True)
+    user_id = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
     profile_pic = models.URLField(blank=True)
     dob = models.DateField(null=True, blank=True)
@@ -41,27 +41,6 @@ class UserProfile(AbstractUser):
 
     def __str__(self):
         return f"{self.name} ({self.email})"
-
-
-class DonorModel(models.Model):
-    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
-    blood_type = models.CharField(max_length=10)
-    city = models.CharField(max_length=100)
-    pincode = models.CharField(max_length=10)
-    donor_images = models.ForeignKey(
-        "DonorImages",  # Using a string to refer to the model before it's declared
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="related_need_blood",
-    )
-    donated_user = models.ForeignKey(
-        UserProfile,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="blood_donations",
-    )
 
 
 class NeedBlood(models.Model):
@@ -86,10 +65,7 @@ class NeedBlood(models.Model):
     def __str__(self):
         return f"{self.patient_name} - {self.blood_group}"
 
-    def update_donated_units(
-        self,
-        units,
-    ):
+    def update_donated_units(self, units):
         self.donated_units += units
         if self.donated_units >= self.number_of_units:
             self.donated = True
@@ -113,42 +89,3 @@ class Donor(models.Model):
 
     def __str__(self):
         return f"{self.user.username} donated {self.units_donated} units for {self.blood_request.patient_name}"
-
-
-class Like(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    need_blood = models.ForeignKey(
-        NeedBlood, on_delete=models.CASCADE, related_name="likes"
-    )
-    created_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f"Like by {self.user.username} on {self.need_blood.patient_name}"
-
-
-class Comment(models.Model):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    need_blood = models.ForeignKey(
-        NeedBlood, on_delete=models.CASCADE, related_name="comments"
-    )
-    text = models.TextField()
-    created_at = models.DateTimeField(default=timezone.now)
-
-    def __str__(self):
-        return f"Comment by {self.user.username} on {self.need_blood.patient_name}"
-
-
-class DonorImages(models.Model):
-    need_blood = models.ForeignKey(
-        NeedBlood,
-        on_delete=models.CASCADE,
-        related_name="donor_images",  # This is how you link multiple images to a NeedBlood
-    )
-    image = models.ImageField(
-        upload_to="donor_pics/",
-        blank=False,
-        null=False,
-    )
-
-    def __str__(self):
-        return f"Donor Image for {self.need_blood.patient_name}"

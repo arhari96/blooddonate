@@ -4,20 +4,20 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.exceptions import AuthenticationFailed
 from . import google
-from .models import DonorImages, NeedBlood, UserProfile, Like, Comment, Donor
+from .models import NeedBlood, UserProfile, Donor
 from firebase_admin import messaging
 import asyncio
 from .serializers import (
-    DonorImagesSerializer,
     BloodRequestSerializer,
     FcmTokenUpdateSerializer,
     GoogleSocialAuthSerializer,
     NeedBloodSerializer,
     UserProfileSerializer,
+    DonorSerializer,
 )
 from dotenv import load_dotenv
 import os
@@ -39,6 +39,7 @@ def get_user_detail(request):
 
 
 class GoogleSocialAuthView(GenericAPIView):
+    permission_classes = [AllowAny]
 
     serializer_class = GoogleSocialAuthSerializer
 
@@ -205,24 +206,20 @@ class RequestandViewBloodRequest(APIView):
             serializer.save(requested_user=request.user)
             data = serializer.data
             requested_user_data = UserProfile.objects.get(id=request.user.id)
-            title = f"New Blood Request for {data["blood_group"]}"
+
+            title = f"New Blood Request for {data['blood_group']}"
             body = f"{requested_user_data.name} has requested for blood {data['blood_group']}"
             message = messaging.Message(
                 data={"title": title, "body": body},
                 topic="blood_request_approve",
             )
 
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
             try:
-                message_response = loop.run_until_complete(
-                    self.send_fcm_message(message)
-                )
+                message_response = messaging.send(message)
                 print("Message Response:", message_response)
             except Exception as e:
                 print("Error:", e)
-            finally:
-                loop.close()
+
             response_data = {
                 "message": "Blood request created successfully",
                 "status": "success",
@@ -230,75 +227,13 @@ class RequestandViewBloodRequest(APIView):
             }
             print(response_data)
             return Response(response_data, status=status.HTTP_201_CREATED)
+
         response_data = {
             "message": "Blood request not created",
             "status": "failure",
             "data": serializer.errors,
         }
         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    async def send_fcm_message(self, message):
-        try:
-            message_response = await messaging.send(message)
-            print("Message Response:", message_response)
-        except Exception as e:
-            print("Error:", e)
-
-
-class LikePost(APIView):
-    """
-    View to like a blood request.
-    """
-
-    def post(self, request, need_blood_id):
-        need_blood = get_object_or_404(NeedBlood, id=need_blood_id)
-        # Check if the user has already liked the post
-        if Like.objects.filter(user=request.user, need_blood=need_blood).exists():
-            return Response(
-                {
-                    "status": "failure",
-                    "data": False,
-                    "message": "You have already liked this post.",
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        # Create a new like
-        like = Like.objects.create(user=request.user, need_blood=need_blood)
-        like.save()
-        return Response(
-            {"status": "success", "data": True, "message": "Post liked successfully."},
-            status=status.HTTP_201_CREATED,
-        )
-
-
-class UnlikePost(APIView):
-    """
-    View to unlike a blood request.
-    """
-
-    def post(self, request, need_blood_id):
-        need_blood = get_object_or_404(NeedBlood, id=need_blood_id)
-        # Check if the user has already liked the post
-        like = Like.objects.filter(user=request.user, need_blood=need_blood).first()
-        if not like:
-            return Response(
-                {
-                    "status": "failure",
-                    "message": "You have not liked this post.",
-                    "data": True,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        # Delete the like
-        like.delete()
-        return Response(
-            {
-                "status": "success",
-                "message": "Post unliked successfully.",
-                "data": False,
-            },
-            status=status.HTTP_200_OK,
-        )
 
 
 class NeedBloodView(APIView):
@@ -367,22 +302,6 @@ class DonateBloodView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Get donor_photos list from request.files (this part depends on your front-end implementation)
-        donor_photos = request.FILES.getlist("donor_photos")
-        if not donor_photos:
-            return Response(
-                {"message": "No donor photos uploaded."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Pass the authenticated user and the photos to the donate_blood method
-        for photo in donor_photos:
-            donor_image = DonorImages(need_blood=need_blood, image=photo)
-            donor_image.save()
-        need_blood.donate_blood(
-            donated_user=request.user,
-        )
-
         return Response(
             {
                 "status": "success",
@@ -408,19 +327,37 @@ def get_blood_requests(request):
 
 
 @api_view(["POST"])
-def donate_blood(request, request_id):
-    need_blood = get_object_or_404(NeedBlood, id=request_id)
-    need_blood.update_donated_units(1, request.user)
-    Donor.objects.create(blood_request=need_blood, user=request.user, units_donated=1)
+def donate_blood(request, pk):
+    need_blood = get_object_or_404(NeedBlood, id=pk)
+    need_blood.update_donated_units(1)
+    existing_donor = Donor.objects.filter(
+        blood_request=need_blood, user=request.user
+    ).first()
 
-    return Response(
-        {
-            "status": "success",
-            "message": "Blood donation successful. Thank you for donating blood!",
-            "data": "Success",
-        },
-        status=status.HTTP_200_OK,
-    )
+    if existing_donor:
+        existing_donor.units_donated += 1
+        existing_donor.save()
+        return Response(
+            {
+                "status": "success",
+                "message": f"Thank you for your continued support! You have now donated {existing_donor.units_donated} units of blood for this request.",
+                "data": "",
+            },
+            status=status.HTTP_200_OK,
+        )
+    else:
+        # Create a new donor record
+        Donor.objects.create(
+            blood_request=need_blood, user=request.user, units_donated=1
+        )
+        return Response(
+            {
+                "status": "success",
+                "message": "Thank you for your first donation! You have successfully donated 1 unit of blood for this request.",
+                "data": "",
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class PendingRequests(APIView):
@@ -444,7 +381,7 @@ class PendingRequests(APIView):
         need_blood.approved = True
         need_blood.save()
         notification_title = f"{need_blood.blood_group} Blood Request"
-        notification_body = f"{need_blood.patient_name} needs {need_blood.blood_units} units of {need_blood.blood_group} blood."
+        notification_body = f"{need_blood.patient_name} needs {need_blood.number_of_units} units of {need_blood.blood_group} blood."
         message = messaging.Message(
             data={
                 "title": notification_title,
@@ -461,3 +398,39 @@ class PendingRequests(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+@api_view(["GET"])
+def test_notification(request):
+    message = messaging.Message(
+        data={
+            "title": "Test Notification",
+            "body": "This is a test notification.",
+        },
+        topic="blood_request_approve",
+    )
+    result = messaging.send(message)
+    print(result)
+    return Response(
+        {
+            "status": "success",
+            "message": "Test notification sent successfully",
+            "data": "Success",
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_donor_list(request):
+    donor_list = Donor.objects.filter(user=request.user)
+    serializer = DonorSerializer(donor_list, many=True)
+    return Response(
+        {
+            "status": "success",
+            "message": "Donor list fetched successfully",
+            "data": serializer.data,
+        },
+        status=status.HTTP_200_OK,
+    )

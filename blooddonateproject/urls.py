@@ -26,12 +26,12 @@ from blooddonateapp.views import (
     RequestandViewBloodRequest,
     Test,
     UpdateUserProfile,
-    LikePost,
-    UnlikePost,
     get_blood_requests,
     donate_blood,
     PendingRequests,
     get_user_detail,
+    test_notification,
+    get_donor_list,
 )
 
 
@@ -52,6 +52,6 @@ urlpatterns = [
     path("api/donate-blood/<int:pk>/", donate_blood, name="donate_blood"),
     path("api/all-blood-requests/", get_blood_requests, name="get_blood_requests"),
     path("api/pending-requests/", PendingRequests.as_view(), name="pending_requests"),
-    path("posts/<int:pk>/like/", LikePost.as_view(), name="like_post"),
-    path("posts/<int:pk>/dislike/", UnlikePost.as_view(), name="dislike_post"),
+    path("api/test-notification/", test_notification, name="test_notification"),
+    path("api/donor-list/", get_donor_list, name="donor_list"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

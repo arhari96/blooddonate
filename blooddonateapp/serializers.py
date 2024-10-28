@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import DonorImages, Comment, NeedBlood
+from .models import NeedBlood, Donor
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
@@ -47,61 +47,13 @@ class FcmTokenUpdateSerializer(serializers.Serializer):
         return value
 
 
-class DonorImagesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DonorImages
-        fields = ("image",)
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = "__all__"
-
-
 class NeedBloodSerializer(serializers.ModelSerializer):
     requested_user = UserProfileSerializer(read_only=True)
     donated_user = UserProfileSerializer(read_only=True)
-    donor_images = DonorImagesSerializer(many=True, read_only=True)
-    likes_count = (
-        serializers.SerializerMethodField()
-    )  # Add a custom field for likes count
-    comments_count = serializers.SerializerMethodField()
-    liked = serializers.SerializerMethodField()
 
     class Meta:
         model = NeedBlood
         fields = "__all__"
-
-    def get_likes_count(self, obj):
-        # Get the count of likes for the blood request
-        return obj.likes.count()
-
-    def get_comments_count(self, obj):
-        # Get the count of comments for the blood request
-        return obj.comments.count()
-
-    def get_liked(self, obj):
-        # Check if the current user has liked this blood request
-        print(self.context)
-        user = self.context["request"].user
-        if user.is_authenticated:
-            return obj.likes.filter(user=user).exists()
-        return False
-
-    def get_donor_images(self, obj):
-        # Only return image URLs if the blood has been donated
-        if obj.donated:
-            request = self.context.get("request")
-            if request is not None:
-                base_url = request.build_absolute_uri("/")[
-                    :-1
-                ]  # Remove the trailing slash
-                image_urls = [
-                    base_url + image.image.url for image in obj.donor_images.all()
-                ]
-                return image_urls
-        return []
 
     def create(self, validated_data):
         # Set requested_user to the authenticated user making the request
@@ -119,4 +71,12 @@ class BloodRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NeedBlood
+        fields = "__all__"
+
+
+class DonorSerializer(serializers.ModelSerializer):
+    blood_request = NeedBloodSerializer(read_only=True)
+
+    class Meta:
+        model = Donor
         fields = "__all__"
