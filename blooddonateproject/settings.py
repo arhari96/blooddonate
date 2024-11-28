@@ -16,6 +16,9 @@ from dotenv import load_dotenv
 import os
 import firebase_admin
 from firebase_admin import credentials
+import pymysql
+
+pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,7 +42,6 @@ cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
 firebase_app = firebase_admin.initialize_app(cred)
 
 INSTALLED_APPS = [
-    "blooddonateapp",
     "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework.authtoken",
     "rest_framework",
+    "blooddonateapp",
 ]
 
 MIDDLEWARE = [
@@ -100,11 +103,14 @@ WSGI_APPLICATION = "blooddonateproject.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "mjryknxf_ibg",
+        "HOST": "103.86.177.200",
+        "USER": "mjryknxf_hari",
+        "PASSWORD": "HariBabu_@1997",
+        "PORT": 3306,
     }
 }
-
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -146,3 +152,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "blooddonateapp.UserProfile"

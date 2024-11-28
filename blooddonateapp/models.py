@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
 
 
 class UserProfile(AbstractUser):
@@ -59,7 +60,9 @@ class NeedBlood(models.Model):
     request_date = models.DateField(auto_now_add=True)
     donated_date = models.DateField(null=True, blank=True)
     requested_user = models.ForeignKey(
-        UserProfile, on_delete=models.CASCADE, related_name="blood_requests"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="blood_requests",
     )
 
     def __str__(self):
@@ -84,7 +87,7 @@ class Donor(models.Model):
     blood_request = models.ForeignKey(
         NeedBlood, on_delete=models.CASCADE, related_name="donors"
     )
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     units_donated = models.IntegerField()
 
     def __str__(self):
