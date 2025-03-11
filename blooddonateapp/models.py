@@ -23,7 +23,7 @@ class UserProfile(AbstractUser):
     )
     user_id = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
-    profile_pic = models.URLField(blank=True)
+    profile_pic = models.URLField(blank=True, null=True)
     dob = models.DateField(null=True, blank=True)
     city = models.CharField(max_length=100, blank=True)
     pincode = models.CharField(max_length=10, blank=True)

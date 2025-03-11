@@ -67,11 +67,10 @@ class GoogleSocialAuthView(GenericAPIView):
                 {"status": "failed", "message": "Oops, who are you?", "data": {}},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
-
+        print(user_data)
         user_id = user_data["sub"]
         email = user_data["email"]
         name = user_data["name"]
-        profile_pic = user_data["picture"]  # Get profile picture if available
 
         # Check if user already exists
         user, created = UserProfile.objects.get_or_create(
@@ -80,7 +79,7 @@ class GoogleSocialAuthView(GenericAPIView):
 
         if created:
             # If the user was just created, set additional profile fields
-            user.profile_pic = profile_pic
+
             user.save()
 
             refresh = RefreshToken.for_user(user)
